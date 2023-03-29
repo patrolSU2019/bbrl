@@ -9,6 +9,7 @@ import gym
 from bbrl.agents.agent import Agent
 from typing import Tuple, Union
 
+
 def _convert_action(action):
     if len(action.size()) == 0:
         action = action.item()
@@ -276,6 +277,12 @@ class GymAgent(Agent):
     def is_discrete_state(self):
         return isinstance(self.observation_space, gym.spaces.Discrete)
 
+    def is_goal_state(self):
+        return (
+            isinstance(self.observation_space, gym.spaces.Dict)
+            and "desired_goal" in self.observation_space.spaces
+        )
+
     def get_obs_and_actions_sizes(self):
         action_dim = 0
         state_dim = 0
@@ -287,6 +294,8 @@ class GymAgent(Agent):
             state_dim = self.observation_space.shape[0]
         elif self.is_discrete_state():
             state_dim = 1  # self.observation_space.n
+        elif self.is_goal_state():
+            state_dim = self.observation_space.spaces["observation"].shape[0]
         return state_dim, action_dim
 
 
@@ -391,6 +400,7 @@ class NoAutoResetGymAgent(GymAgent):
 
 # --------------------------- part added from the code of Folco Bertini and Nikola Matevski --------------------
 
+
 class RunningMeanStd:
     def __init__(self, epsilon: float = 1e-4, shape: Tuple[int, ...] = ()):
         """
@@ -464,7 +474,6 @@ class RunningMeanStd:
         self.mean = new_mean
         self.var = new_var
         self.count = new_count
-
 
 
 class NormalizedNoAutoResetGymAgent(NoAutoResetGymAgent):
